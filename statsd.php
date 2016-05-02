@@ -45,16 +45,44 @@ if (!defined('STATSD_NAMESPACE')) {
 
 
 //the plugin class to track default WP application stats
-class WordPress_StatsD {
-	
+class WordPress_StatsD extends StatsD {
+
+	/**
+	 * Holds the instance of the StatsD object to send queries to the metrics
+	 * server
+	 *
+	 * @var StatsD
+	 **/
 	private $statsd;
-	
+
+	/**
+	 * Default constructor.
+	 *
+	 * This object is structured as a singleton but the original code did not
+	 * operate properly as a singleton. To promote backward compatibility this
+	 * constructor will remain public and fake its way to singletonness
+	 *
+	 * @return WordPress_StatsD
+	 **/
 	public function __construct() {
-		//create global
+		/*
+		 * Setup a global object that all developers can access to 
+		 * add metrics to their own applications
+		 */
 		global $statsd;
+
+		/*
+		 * If we already setup the statsd object onces make sure
+		 * that we do not do it again or reregister all the hooks
+		 */
+		if( !empty( $statsd ) ) {
+			return $statsd;
+		}
+
 		$statsd_connection = new StatsD_Connect(STATSD_IP, STATSD_PORT);
-		$statsd = new StatsD($statsd_connection, STATSD_NAMESPACE);
-		$this->statsd = &$statsd;
+		parent::__construct($statsd_connection, STATSD_NAMESPACE);
+		
+		$this->statsd = $statsd = $this;
 		
 		//action hooks
 		add_action( 'wp_login', array(&$this, 'login') );
