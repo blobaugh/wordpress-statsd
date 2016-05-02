@@ -754,18 +754,29 @@ class StatsD_Connect
      *
      * @return void
      */
-    public function send($message)
-    {
-        if (0 != strlen($message) && $this->_socket) {
-            try {
-                @fwrite($this->_socket, $message);
-								if ( defined( 'STATSD_DEBUG' ) && STATSD_DEBUG ) {
-									global $statsd;
-									$statsd->msgs[] = $message;
-								}
-            } catch (Exception $e) {
-                // ignore it: stats logging failure shouldn't stop the whole app
+    public function send( $message ) {
+        if ( 0 != strlen( $message ) && $this->_socket) {
+
+        	// Send the metrics!
+            $result = fwrite( $this->_socket, $message );
+            
+            // Check to see if sending the metrics failed and log it
+            if( false === $result ) {
+            	error_log( "StatsD: Unable to send to " . $this->getHost() . " metrics: $message" );
+
+            	/**
+            	 * Hook fired when there is an error sending data to the metrics server
+            	 *
+            	 * @param String The formatted metrics message
+            	 * @param StatsD_Connect  Contains the connection settings
+            	 **/
+            	do_action( 'statsd_send_error', $message, $this );
             }
+			
+			if ( defined( 'STATSD_DEBUG' ) && STATSD_DEBUG ) {
+				global $statsd;
+				$statsd->msgs[] = $message;
+			}
         }
     }
 
