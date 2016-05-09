@@ -139,58 +139,58 @@ class WordPress_StatsD extends StatsD {
 		//action hooks
 		add_action( 'wp_login', array( $this, 'login' ) );
 		add_action( 'wp_logout', array( $this, 'logout' ) );
-		add_action( 'wp_login_failed', array( $this, 'login_fail') );
-		add_action( 'retrieve_password_key', array( $this, 'password_reset_gen') );
-		add_action( 'password_reset', array( $this, 'password_reset_complete') );
-		add_action( 'user_register', array( $this, 'user_register') );
+		add_action( 'wp_login_failed', array( $this, 'login_fail' ) );
+		add_action( 'retrieve_password_key', array( $this, 'password_reset_gen' ) );
+		add_action( 'password_reset', array( $this, 'password_reset_complete' ) );
+		add_action( 'user_register', array( $this, 'user_register' ) );
 		
-		add_action( 'publish_post', array( $this, 'publish_post') );
-		add_action( 'wp_trash_post', array( $this, 'trash_post') );
-		add_action( 'delete_post', array( $this, 'delete_post') );
+		add_action( 'publish_post', array( $this, 'publish_post' ) );
+		add_action( 'wp_trash_post', array( $this, 'trash_post' ) );
+		add_action( 'delete_post', array( $this, 'delete_post' ) );
 		
-		add_action( 'wp_insert_comment', array( $this, 'new_comment') );
-		add_action( 'wp_set_comment_status', array( $this, 'approve_comment'), 10, 2 );
-		add_action( 'trash_comment', array( $this, 'trash_comment') );
-		add_action( 'spam_comment', array( $this, 'spam_comment') );
-		add_action( 'unspam_comment', array( $this, 'unspam_comment') );
+		add_action( 'wp_insert_comment', array( $this, 'new_comment' ) );
+		add_action( 'wp_set_comment_status', array( $this, 'approve_comment' ), 10, 2 );
+		add_action( 'trash_comment', array( $this, 'trash_comment' ) );
+		add_action( 'spam_comment', array( $this, 'spam_comment' ) );
+		add_action( 'unspam_comment', array( $this, 'unspam_comment' ) );
 		
-		add_action( 'add_attachment', array( $this, 'add_attachment') );
-		add_action( 'edit_attachment', array( $this, 'edit_attachment') );
-		add_action( 'delete_attachment', array( $this, 'delete_attachment') );
+		add_action( 'add_attachment', array( $this, 'add_attachment' ) );
+		add_action( 'edit_attachment', array( $this, 'edit_attachment' ) );
+		add_action( 'delete_attachment', array( $this, 'delete_attachment' ) );
 		
 		//multisite only hooks
 		if (is_multisite()) {
-			add_action( 'wpmu_new_user', array( $this, 'user_register') );
-			add_action( 'wpmu_new_blog', array( $this, 'new_blog') );
-			add_action( 'make_spam_blog', array( $this, 'spam_blog') );
-			add_action( 'make_ham_blog', array( $this, 'ham_blog') );
-			add_action( 'make_spam_user', array( $this, 'spam_user') );
-			add_action( 'make_ham_user', array( $this, 'ham_user') );
-			add_action( 'archive_blog', array( $this, 'archive_blog') );
-			add_action( 'unarchive_blog', array( $this, 'unarchive_blog') );
-			add_action( 'make_delete_blog', array( $this, 'delete_blog') );
-			add_action( 'make_undelete_blog', array( $this, 'undelete_blog') );
-			add_action( 'init', array( $this, 'blog_count') );
+			add_action( 'wpmu_new_user', array( $this, 'user_register' ) );
+			add_action( 'wpmu_new_blog', array( $this, 'new_blog' ) );
+			add_action( 'make_spam_blog', array( $this, 'spam_blog' ) );
+			add_action( 'make_ham_blog', array( $this, 'ham_blog' ) );
+			add_action( 'make_spam_user', array( $this, 'spam_user' ) );
+			add_action( 'make_ham_user', array( $this, 'ham_user' ) );
+			add_action( 'archive_blog', array( $this, 'archive_blog' ) );
+			add_action( 'unarchive_blog', array( $this, 'unarchive_blog' ) );
+			add_action( 'make_delete_blog', array( $this, 'delete_blog' ) );
+			add_action( 'make_undelete_blog', array( $this, 'undelete_blog' ) );
+			add_action( 'init', array( $this, 'blog_count' ) );
 		}
 		
-		add_action( 'init', array( $this, 'user_count') ); //multisite aware
+		add_action( 'init', array( $this, 'user_count' ) ); //multisite aware
 		
 		//http request timing
-		add_filter( 'pre_http_request', array( $this, 'pre_http'), 10, 3 );
-		add_action( 'http_api_debug', array( $this, 'post_http'), 10, 5 );
+		add_filter( 'pre_http_request', array( $this, 'pre_http' ), 10, 3 );
+		add_action( 'http_api_debug', array( $this, 'post_http' ), 10, 5 );
 		
 		//wpdb
-		add_action( 'shutdown', array( $this, 'num_queries') );
+		add_action( 'shutdown', array( $this, 'num_queries' ) );
 		
-		add_action( 'shutdown', array( $this, 'load_time') );
+		add_action( 'shutdown', array( $this, 'load_time' ) );
 		
-		add_action( 'xmlrpc_call', array( $this, 'xmlrpc_call') );
+		add_action( 'xmlrpc_call', array( $this, 'xmlrpc_call' ) );
 		
 		//trac wp cron
-		add_action( 'init', array( $this, 'wp_cron') );
+		add_action( 'init', array( $this, 'wp_cron' ) );
 		
 		//wp_mail
-		add_filter( 'wp_mail', array( $this, 'wp_mail') );
+		add_filter( 'wp_mail', array( $this, 'wp_mail' ) );
 	}
 
 	/**
@@ -255,14 +255,17 @@ class WordPress_StatsD extends StatsD {
 		 * All metrics will be logically grouped under their namespace in a 
 		 * folder-like manner.
 		 */
-		if (!defined('STATSD_NAMESPACE')) {
-			//if not set build a default namespace off of domain name
+		if( defined( 'STATSD_NAMESPACE' ) ) {
+			// legacy fallback
+			$namespace = STATSD_NAMESPACE;
+		} else {
+			// Build a default namespace off of domain name
 			$domain = parse_url(network_home_url());
-			$namespace = (empty($domain['path']) || $domain['path'] == '/') ? $domain['host'] : ($domain['host'] . '_' . $domain['path']);
-			$namespace = preg_replace('/[^A-Za-z0-9-]/', '_', $namespace); //replace other characters with underscores
-			$this->namespace = apply_filters( 'statsd_namespace', $namespace );
+			$namespace = (empty($domain['path']) || $domain['path'] == '/' ) ? $domain['host'] : ($domain['host'] . '_' . $domain['path']);
+			$namespace = preg_replace('/[^A-Za-z0-9-]/', '_', $namespace); // Replace other characters with underscores
 		}
-
+		$this->namespace = apply_filters( 'statsd_namespace', $namespace );
+		
 		/*
 		 * If running in developer mode this will enable debugging
 		 */
@@ -485,7 +488,7 @@ class WordPress_StatsD extends StatsD {
 	}
 	
 	public function wp_cron() {
-		if ( defined('DOING_CRON') ) {
+		if ( defined('DOING_CRON' ) ) {
 			$this->statsd->increment("cron");
 		}
 	}
@@ -558,7 +561,7 @@ class StatsD
      * @param Connection $connection
      * @param string $namespace global key namespace
      */
-    public function __construct($connection, $namespace = '')
+    public function __construct($connection, $namespace = '' )
     {
         $this->_connection = $connection;
         $this->_namespace = (string) $namespace;
