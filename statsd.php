@@ -37,6 +37,60 @@ class WordPress_StatsD extends StatsD {
 	private $statsd;
 
 	/**
+	 * Domain or IP of the Graphite server
+	 *
+	 * @uses statsd_host filter
+	 * @var string
+	 **/
+	private $host;
+
+	/**
+	 * Port number the metrics server is running on
+	 *
+	 * Default install is port 8125
+	 *
+	 * @uses statsd_port filter
+	 * @var integer
+	 **/
+	private $port = 8125;
+
+	/**
+	 * Rate at which data is sampled and sent on every page
+	 *
+	 * @uses statsd_sample_rate filter
+	 * @var float
+	 **/
+	private $sample_rate = 0.5;
+
+	/**
+	 * How themetrics are grouped
+	 *
+	 * The namespace is how the metrics will be found inside the Graphite
+	 * or Graphana interface.
+	 *
+	 * Namespaces are segmented with a period (".") from left to right.
+	 * E.G:
+	 * Given the namespaces: lobaugh.appsrv1 and lobaugh.appsrv2
+	 * The load time could be as follows: lobaugh.appsrv1.load_time and lobaugh.appsrv2.load_time.
+	 * All metrics will be logically grouped under their namespace in a 
+	 * folder-like manner.
+	 *
+	 * @uses statsd_namespace filter
+	 * @var string
+	 **/
+	private $namespace;
+
+	/**
+	 * Enable debugging
+	 *
+	 * Will print messages via error_log()
+	 *
+	 * @uses statsd_debug filter
+	 * @var boolean
+	 **/
+	private $debug = false;
+
+	/**
 	 * Default constructor.
 	 *
 	 * This object is structured as a singleton but the original code did not
@@ -46,6 +100,7 @@ class WordPress_StatsD extends StatsD {
 	 * @return WordPress_StatsD
 	 **/
 	public function __construct() {
+		
 		/*
 		 * Setup a global object that all developers can access to 
 		 * add metrics to their own applications
@@ -70,14 +125,14 @@ class WordPress_StatsD extends StatsD {
 		 * Setup the connection to the StatsD server. This is a seperate 
 		 * object that solely handles sending messages
 		 */
-		$statsd_connection = new StatsD_Connect(STATSD_IP, STATSD_PORT);
+		$statsd_connection = new StatsD_Connect( $this->host, $this->port );
 		
 		/*
 		 * Initialize the primary StatsD object that this one extends
 		 *
 		 * Note: The parent object has DIFFERENT constructor arguments!
 		 */
-		parent::__construct($statsd_connection, STATSD_NAMESPACE);
+		parent::__construct( $statsd_connection, $this->namespace );
 		
 		$this->statsd = $statsd = $this;
 		
@@ -163,11 +218,11 @@ class WordPress_StatsD extends StatsD {
 		if( defined( 'STATSD_IP' ) ) {
 			$host = STATSD_IP; 
 		}
-		$host = apply_filters( 'statsd_host', $host );
+		$this->host = apply_filters( 'statsd_host', $host );
 		/**
 		 * @todo refactor this out
 		 */
-		if( !defined( 'STATSD_IP' ) ) { define( 'STATSD_IP', $host ); }
+		if( !defined( 'STATSD_IP' ) ) { define( 'STATSD_IP', $this->host ); }
 
 		/*
 		 * Find the metric server port. 
@@ -178,26 +233,26 @@ class WordPress_StatsD extends StatsD {
 		 * - CONSTANT
 		 * - WordPress hook
 		 */
-		$port = 8125;
+		$port = $this->port;
 		if( defined( 'STATSD_PORT' ) ) {
 			$port = STATSD_PORT;
 		}
-		$port = apply_filters( 'statsd_port', '8125' );
+		$this->port = apply_filters( 'statsd_port', $port );
 		/**
 		 * @todo refactor this out
 		 */
-		if( !defined( 'STATSD_PORT' ) ) { define( 'STATSD_PORT', $port ); }
+		if( !defined( 'STATSD_PORT' ) ) { define( 'STATSD_PORT', $this->port ); }
 
 		/*
 		 * Set the data sample rate
 		 *
 		 * Overrides the sample rate for clls run on every page
 		 **/
-		$sample_rate = apply_filters( 'statsd_sample_rate', 0.5 );
+		$this->sample_rate = apply_filters( 'statsd_sample_rate', $this->port );
 		/**
 		 * @todo refactor this out
 		 */
-		if( !defined( 'STATSD_SAMPLE_RATE' ) ) { define( 'STATSD_SAMPLE_RATE', $sample_rate ); }
+		if( !defined( '$this->sample_rate' ) ) { define( 'STATSD_SAMPLE_RATE', $this->sample_rate ); }
 
 		/*
 		 * Find the StatsD namespace
@@ -217,9 +272,17 @@ class WordPress_StatsD extends StatsD {
 			$domain = parse_url(network_home_url());
 			$namespace = (empty($domain['path']) || $domain['path'] == '/') ? $domain['host'] : ($domain['host'] . '_' . $domain['path']);
 			$namespace = preg_replace('/[^A-Za-z0-9-]/', '_', $namespace); //replace other characters with underscores
-			$namespace = apply_filters( 'statsd_namespace', $namespace );
-			define( 'STATSD_NAMESPACE', $namespace );
+			$this->namespace = apply_filters( 'statsd_namespace', $namespace );
+			define( 'STATSD_NAMESPACE', $this->namespace );
 		}
+
+		/*
+		 * If running in developer mode this will enable debugging
+		 */
+		if( defined( 'STATSD_DEBUG' ) ) {
+			$this->debug = STATSD_DEBUG;
+		}
+		$this->debug = apply_filters( 'statsd_debug', $this->debug );
 
 	}
 	
@@ -410,18 +473,22 @@ class WordPress_StatsD extends StatsD {
 			
 		} else { //SAVEQUERIES off
 			
-			$this->statsd->count("wpdb.queries.all", get_num_queries(), STATSD_SAMPLE_RATE);
+			$this->statsd->count("wpdb.queries.all", get_num_queries(), $this->sample_rate);
 			
 		}
 	}
 	
 	public function load_time() {
 		$load_time = round( 1000 * timer_stop(0) );
-		$this->statsd->timing("load_time", $load_time, STATSD_SAMPLE_RATE);
+		$this->statsd->timing("load_time", $load_time, $this->sample_rate);
 		
 		//prints all udp calls made in footer
-		if ( defined( 'STATSD_DEBUG' ) && STATSD_DEBUG ) {
-			var_dump($this->statsd->msgs);
+		if ( $this->debug ) {
+			ob_start();
+			var_dump( $this->statsd->msgs );
+			$msg = ob_get_contents();
+			ob_end_clean();
+			error_log( $msg );
 		}
 	}
 	
@@ -855,7 +922,7 @@ class StatsD_Connect
             	do_action( 'statsd_send_error', $message, $this );
             }
 			
-			if ( defined( 'STATSD_DEBUG' ) && STATSD_DEBUG ) {
+			if ( $this->debug ) {
 				global $statsd;
 				$statsd->msgs[] = $message;
 			}
