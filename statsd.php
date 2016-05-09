@@ -219,10 +219,6 @@ class WordPress_StatsD extends StatsD {
 			$host = STATSD_IP; 
 		}
 		$this->host = apply_filters( 'statsd_host', $host );
-		/**
-		 * @todo refactor this out
-		 */
-		if( !defined( 'STATSD_IP' ) ) { define( 'STATSD_IP', $this->host ); }
 
 		/*
 		 * Find the metric server port. 
@@ -238,10 +234,6 @@ class WordPress_StatsD extends StatsD {
 			$port = STATSD_PORT;
 		}
 		$this->port = apply_filters( 'statsd_port', $port );
-		/**
-		 * @todo refactor this out
-		 */
-		if( !defined( 'STATSD_PORT' ) ) { define( 'STATSD_PORT', $this->port ); }
 
 		/*
 		 * Set the data sample rate
@@ -249,10 +241,6 @@ class WordPress_StatsD extends StatsD {
 		 * Overrides the sample rate for clls run on every page
 		 **/
 		$this->sample_rate = apply_filters( 'statsd_sample_rate', $this->port );
-		/**
-		 * @todo refactor this out
-		 */
-		if( !defined( '$this->sample_rate' ) ) { define( 'STATSD_SAMPLE_RATE', $this->sample_rate ); }
 
 		/*
 		 * Find the StatsD namespace
@@ -273,7 +261,6 @@ class WordPress_StatsD extends StatsD {
 			$namespace = (empty($domain['path']) || $domain['path'] == '/') ? $domain['host'] : ($domain['host'] . '_' . $domain['path']);
 			$namespace = preg_replace('/[^A-Za-z0-9-]/', '_', $namespace); //replace other characters with underscores
 			$this->namespace = apply_filters( 'statsd_namespace', $namespace );
-			define( 'STATSD_NAMESPACE', $this->namespace );
 		}
 
 		/*
