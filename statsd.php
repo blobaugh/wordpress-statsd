@@ -749,14 +749,16 @@ class StatsD
      * @param int $value
      * @param string $type
      * @param int $sampleRate
+     * @param boolean $fromMultisite Default: false. Used by multisite helper method
      *
      * @return void
      */
-    protected function _send($key, $value, $type, $sampleRate)
-    {
+    protected function _send( $key, $value, $type, $sampleRate, $fromMultisite = false ) {
+    		$preKey = $key;
 			if (0 != strlen($this->_namespace)) {
 					$key = sprintf('%s.%s', $this->_namespace, $key);
 			}
+		
 
 			$message = sprintf("%s:%d|%s", $key, $value, $type);
 			$sampledData = '';
@@ -778,6 +780,29 @@ class StatsD
 			} else {
 				$this->_batch[] = $sampledData;
 			}
+
+			if( !$fromMultisite && is_multisite() ) {
+				$this->_send_ms( $preKey, $value, $type, $sampleRate );
+			}
+    }
+
+	/**
+	 * Helper function that resends metrics to for the individual site on
+	 * a multisite install
+	 *
+	 * @todo review overall architechture and determin if this is the "best method"
+	 **/
+    protected function _send_ms( $key, $value, $type, $sampleRate ) {
+			// Build new namespace off current site URL	
+			$url = str_replace( 'http://', '', site_url() );
+			$url = str_replace( 'https://', '', $url );
+			$key .= '.' . preg_replace( '/[^A-Za-z0-9-]/', '_', $url ); // Replace other characters with underscores
+
+			/*if( is_user_logged_in() ) {
+				var_dump( $key );
+			}*/
+
+			$this->_send( $key, $value, $type, $sampleRate, true );
     }
 
     /**
