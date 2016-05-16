@@ -136,7 +136,10 @@ class WordPress_StatsD extends StatsD {
 		
 		$this->statsd = $statsd = $this;
 		
-		//action hooks
+		/*
+		 * Begin tapping into some default WordPress hooks to provide
+		 * a standard set of metrics OOTB
+		 */
 		add_action( 'wp_login', array( $this, 'login' ) );
 		add_action( 'wp_logout', array( $this, 'logout' ) );
 		add_action( 'wp_login_failed', array( $this, 'login_fail' ) );
@@ -158,24 +161,13 @@ class WordPress_StatsD extends StatsD {
 		add_action( 'edit_attachment', array( $this, 'edit_attachment' ) );
 		add_action( 'delete_attachment', array( $this, 'delete_attachment' ) );
 		
-		//multisite only hooks
-		if (is_multisite()) {
-			add_action( 'wpmu_new_user', array( $this, 'user_register' ) );
-			add_action( 'wpmu_new_blog', array( $this, 'new_blog' ) );
-			add_action( 'make_spam_blog', array( $this, 'spam_blog' ) );
-			add_action( 'make_ham_blog', array( $this, 'ham_blog' ) );
-			add_action( 'make_spam_user', array( $this, 'spam_user' ) );
-			add_action( 'make_ham_user', array( $this, 'ham_user' ) );
-			add_action( 'archive_blog', array( $this, 'archive_blog' ) );
-			add_action( 'unarchive_blog', array( $this, 'unarchive_blog' ) );
-			add_action( 'make_delete_blog', array( $this, 'delete_blog' ) );
-			add_action( 'make_undelete_blog', array( $this, 'undelete_blog' ) );
-			add_action( 'init', array( $this, 'blog_count' ) );
-		}
+		
 		
 		add_action( 'init', array( $this, 'user_count' ) ); //multisite aware
 		
-		//http request timing
+		/*
+		 * Track external calls made with the HTTP API
+		 */
 		add_filter( 'pre_http_request', array( $this, 'pre_http' ), 10, 3 );
 		add_action( 'http_api_debug', array( $this, 'post_http' ), 10, 5 );
 		
@@ -191,6 +183,23 @@ class WordPress_StatsD extends StatsD {
 		
 		//wp_mail
 		add_filter( 'wp_mail', array( $this, 'wp_mail' ) );
+
+		/*
+		 * Hook into Multisite specific actions
+		 */
+		if (is_multisite()) {
+			add_action( 'wpmu_new_user', array( $this, 'user_register' ) );
+			add_action( 'wpmu_new_blog', array( $this, 'new_blog' ) );
+			add_action( 'make_spam_blog', array( $this, 'spam_blog' ) );
+			add_action( 'make_ham_blog', array( $this, 'ham_blog' ) );
+			add_action( 'make_spam_user', array( $this, 'spam_user' ) );
+			add_action( 'make_ham_user', array( $this, 'ham_user' ) );
+			add_action( 'archive_blog', array( $this, 'archive_blog' ) );
+			add_action( 'unarchive_blog', array( $this, 'unarchive_blog' ) );
+			add_action( 'make_delete_blog', array( $this, 'delete_blog' ) );
+			add_action( 'make_undelete_blog', array( $this, 'undelete_blog' ) );
+			add_action( 'init', array( $this, 'blog_count' ) );
+		}
 	}
 
 	/**
