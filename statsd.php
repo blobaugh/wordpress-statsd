@@ -267,6 +267,63 @@ class WordPress_StatsD extends StatsD {
 		}
 		$this->namespace = apply_filters( 'statsd_namespace', $namespace );
 	}
+
+	/**
+	 * Increments the key by 1
+	 *
+	 * @param string $key
+	 **/
+	public function increment( $key ) {
+		$this->statsd->increment( $key );
+	}
+
+	/**
+	 * Decrements the key by 1
+	 *
+	 * @param string $key
+	 **/
+	public function decrement( $key ) {
+		$this->statsd->decrement( $key );
+	}
+
+	/**
+	 * Send a count
+	 *
+	 * @param string $key
+	 * @param integer $count
+	 **/
+	public function count( $key, $value ) {
+		$this->statsd->count( $key, $value );
+	}
+
+	/**
+	 * Starts a timer for the $key running
+	 *
+	 * @param string $key
+	 **/
+	public function startTming( $key ) {
+		$this->statsd->startTiming( $key );
+	}
+
+	/**
+	 * Ends the running timer for $key and sends it to the 
+	 * statsd server
+	 *
+	 * @param string $key
+	 **/
+	public function endTiming( $key ) {
+		$this->statsd->endTiming( $key );
+	}
+
+	/**
+	 * Sends a guage (arbitrary value)
+	 *
+	 * @param string $key
+	 * @param integer $value
+	 **/
+	public function guage( $key, $value ) {
+		$this->statsd->guage( $key, $value );
+	}
 	
 	/* logins/registration */
 	public function login($username) {
