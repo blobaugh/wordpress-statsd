@@ -81,16 +81,6 @@ class WordPress_StatsD extends StatsD {
 	private $namespace;
 
 	/**
-	 * Enable debugging
-	 *
-	 * Will print messages via error_log()
-	 *
-	 * @uses statsd_debug filter
-	 * @var boolean
-	 **/
-	private $debug = false;
-
-	/**
 	 * Default constructor.
 	 *
 	 * This object is structured as a singleton but the original code did not
@@ -274,15 +264,6 @@ class WordPress_StatsD extends StatsD {
 			$namespace = preg_replace('/[^A-Za-z0-9-]/', '_', $namespace); // Replace other characters with underscores
 		}
 		$this->namespace = apply_filters( 'statsd_namespace', $namespace );
-		
-		/*
-		 * If running in developer mode this will enable debugging
-		 */
-		if( defined( 'STATSD_DEBUG' ) ) {
-			$this->debug = STATSD_DEBUG;
-		}
-		$this->debug = apply_filters( 'statsd_debug', $this->debug );
-
 	}
 	
 	/* logins/registration */
@@ -480,15 +461,6 @@ class WordPress_StatsD extends StatsD {
 	public function load_time() {
 		$load_time = round( 1000 * timer_stop(0) );
 		$this->statsd->timing("load_time", $load_time, $this->sample_rate);
-		
-		//prints all udp calls made in footer
-		if ( $this->debug ) {
-			ob_start();
-			var_dump( $this->statsd->msgs );
-			$msg = ob_get_contents();
-			ob_end_clean();
-			error_log( $msg );
-		}
 	}
 	
 	public function xmlrpc_call($type) {
@@ -945,12 +917,7 @@ class StatsD_Connect
             	 **/
             	do_action( 'statsd_send_error', $message, $this );
             }
-			
-			if ( $this->debug ) {
-				global $statsd;
-				$statsd->msgs[] = $message;
-			}
-        }
+    	}
     }
 
     /**
