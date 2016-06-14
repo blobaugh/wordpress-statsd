@@ -4,8 +4,10 @@ Plugin Name: StatsD WordPress Client
 Version: 0.1
 Plugin URI: http://wordpress.org/extend/plugins/statsd/
 Description: For no-latency application metric tracking and code profiling via <a href="http://codeascraft.com/2011/02/15/measure-anything-measure-everything/">Etsy's StatsD</a> + Graphite. Tracks logins, password resets, users, registrations, posting, commenting, attachments, XML-RPC, multiiste blog actions, load time, query count, http requests, and more! Requires <a href="https://github.com/etsy/statsd">StatsD</a> on the local or private network server. See API usage instructions: https://github.com/domnikl/statsd-php/blob/develop/README.md
-Author: Aaron Edwards
-Author URI: http://uglyrobot.com
+Author: Ben Lobaugh
+Author URI: http://ben.lobaugh.net
+Originally based on Author: Aaron Edwards
+Originally based on Author URI: http://uglyrobot.com
 Network: true
 
 Copyright 2014 UglyRobot Web Development (http://uglyrobot.com)
@@ -480,7 +482,7 @@ class WordPress_StatsD extends StatsD {
 	}
 }
 
-new WordPress_StatsD;
+$statsd = new WordPress_StatsD;
 
 
 /* Based off php statsd client by Dominik Liebler <liebler.dominik@googlemail.com>
