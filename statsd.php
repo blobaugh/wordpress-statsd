@@ -176,6 +176,10 @@ class WordPress_StatsD extends StatsD {
 		//wp_mail
 		add_filter( 'wp_mail', array( $this, 'wp_mail' ) );
 
+		//track search queries
+		add_action( 'pre_get_posts', array( $this, 'pre_search_query' ) );
+		add_filter( 'the_posts', array( $this, 'post_search_query' ), 10, 2 );
+
 		/*
 		 * Hook into Multisite specific actions
 		 */
@@ -241,7 +245,7 @@ class WordPress_StatsD extends StatsD {
 		 *
 		 * Overrides the sample rate for clls run on every page
 		 **/
-		$this->sample_rate = apply_filters( 'statsd_sample_rate', $this->port );
+		$this->sample_rate = apply_filters( 'statsd_sample_rate', 0.5 );
 
 		/*
 		 * Find the StatsD namespace
@@ -268,63 +272,6 @@ class WordPress_StatsD extends StatsD {
 		$this->namespace = apply_filters( 'statsd_namespace', $namespace );
 	}
 
-	/**
-	 * Increments the key by 1
-	 *
-	 * @param string $key
-	 **/
-	public function increment( $key ) {
-		$this->statsd->increment( $key );
-	}
-
-	/**
-	 * Decrements the key by 1
-	 *
-	 * @param string $key
-	 **/
-	public function decrement( $key ) {
-		$this->statsd->decrement( $key );
-	}
-
-	/**
-	 * Send a count
-	 *
-	 * @param string $key
-	 * @param integer $count
-	 **/
-	public function count( $key, $value ) {
-		$this->statsd->count( $key, $value );
-	}
-
-	/**
-	 * Starts a timer for the $key running
-	 *
-	 * @param string $key
-	 **/
-	public function startTming( $key ) {
-		$this->statsd->startTiming( $key );
-	}
-
-	/**
-	 * Ends the running timer for $key and sends it to the 
-	 * statsd server
-	 *
-	 * @param string $key
-	 **/
-	public function endTiming( $key ) {
-		$this->statsd->endTiming( $key );
-	}
-
-	/**
-	 * Sends a guage (arbitrary value)
-	 *
-	 * @param string $key
-	 * @param integer $value
-	 **/
-	public function guage( $key, $value ) {
-		$this->statsd->guage( $key, $value );
-	}
-	
 	/* logins/registration */
 	public function login($username) {
 		$this->statsd->increment("logins.login");
@@ -536,6 +483,24 @@ class WordPress_StatsD extends StatsD {
 	public function wp_mail($wp_mail) {
 		$this->statsd->increment("email");
 		return $wp_mail;
+	}
+
+	public function pre_search_query( $query ) {
+		if ( !is_admin() && $query->is_main_query() ) {
+			if ( $query->is_search ) {
+				$this->statsd->startTiming("search");
+			}
+		}
+	}
+
+	public function post_search_query( $posts, $query ) {
+		if ( !is_admin() && $query->is_main_query() ) {
+			if ( $query->is_search ) {
+				$this->statsd->endTiming("search");
+			}
+		}
+
+		return $posts;
 	}
 }
 
